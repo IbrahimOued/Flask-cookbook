@@ -1,45 +1,37 @@
-# Handling basic configurations
+# Configuring using class-based settings
 
-In flask, a configuration is done on an attribute named `config` of the `Flask` object. The `config` attribute is a subclass of a dictionary, and we can modify it just like any dictionary.
-
-The debug Boolean can also be set at the Flask object level rather than at the config level, as follows:
-
-```py
-app.debug = True
-```
-
-Alternatively, we can pass debug as a named argument to app.run, as follows:
-app.run(debug=True)
-In new versions of Flask, the debug mode can also set on an environment variable, `FLASK_DEBUG=1`, and then run the app using flask run or Python's -m switch:
-
-```bash
-$ export FLASK_DEBUG=1
-```
-
-Enabling the debug mode will make the server reload itself in the event of any code changes, and it also provides the very helpful Werkzeug debugger when something goes wrong.
-
-As an **application grows larger, there is a need to manage the application's configuration in a separate file**, as shown in the following example. Mostly specific to machine-based setups, it is unlikely that this will be a part of the version-control system. For this, Flask provides us with multiple ways to fetch configurations. The most frequently used methods are as follows:
-
-* From a python configuration file (`*.cfg`), the configuration can be fetched using the following
-
-```py
-app.config.from_pyfile('myconfig.cfg')
-```
-
-* From an object, the configuration can be fetched using the following command:
-
-```py
-app.config.from_object(__name__)
-```
-
-* Alternatively, to load from the same file from which this command is run, we can also use the following command:
+An interesting way of laying out configurations for different deployment modes, such as **production**, **testing**, **staging**, and so on, can be cleanly done using the inheritance pattern of classes. Each mode can have several different configuration settings, or some settings that will remain the same. In this recipe, we will learn how to use class-based settings to achieve such a pattern.
 
 ```python
-app.config.from_object(__name__)
+class BaseConfig(object): 
+    'Base config class'
+    SECRET_KEY = 'A random secret key'
+    DEBUG = True
+    TESTING = False
+    NEW_CONFIG_VARIABLE = 'my value'
+ 
+class ProductionConfig(BaseConfig): 
+    'Production specific config' 
+    DEBUG = False 
+    SECRET_KEY = open('/path/to/secret/file').read() 
+ 
+class StagingConfig(BaseConfig): 
+    'Staging specific config' 
+    DEBUG = True 
+ 
+class DevelopmentConfig(BaseConfig): 
+    'Development environment specific config' 
+    DEBUG = True 
+    TESTING = True 
+    SECRET_KEY = 'Another random secret key'
 ```
 
-* From the environment variable, the configuration can be fetched using the following command:
+> The **secret key** is stored in a separate file because, for security reasons, **it should not be a part of your version-control system**. This should be kept in the local filesystem on the machine itself, whether it is your personal machine or a server.
+
+Now we can use any of the preceding classes while loading the application's configuration via from_object(). Let's say that we save the preceding class-based configuration in a file named configuration.py, as follows:
 
 ```python
-app.config.from_envvar('PATH_TO_CONFIG_FILE')
+app.config.from_object('configuration.DevelopmentConfig')
 ```
+
+Overall, this makes the management of configurations for different deployment environments more flexible and easy.
