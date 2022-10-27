@@ -1,7 +1,13 @@
-# Creating a modular web app with blueprints
+# Making a Flask app installable using setuptools
 
-A blueprint is a concept in Flask that helps make large applications really modular. This keeps application dispatching simple by providing a central place to register all components in an application. A blueprint looks like an application object but is not an application. It also looks like a pluggable app, or a smaller part of a bigger app, but it is not. A blueprint is actually a set of operations that can be registered on an application and represents how to construct or build an application.
+We now have a Flask app, but how do we install it like any Python package? It is possible that another application might depend on our application, or that our application is in fact an extension for Flask and would need to be installed in a Python environment so it can be used by other applications. In this recipe, we will see how `setuptools` can be used to create an installable Python package.
 
-We have now defined a blueprint in the `flask_app/my_app/hello/views.py` file. We no longer need the application object anymore, and our complete routing is defined on a blueprint named hello. Instead of @app.route, we use @hello.route. The same blueprint is imported into `flask_app/my_app/__init__.py` and registered on the application object.
+most of the configuration is self-explanatory. The classifiers are used when the application is made available on PyPI. These will help other users search the application using the relevant classifiers.
 
-We can create any number of blueprints in our application and complete most of the activities that we would usually do, such as providing different template paths or different static paths. We can even have different URL prefixes or subdomains for our blueprints.
+Now, we can run this file with the install keyword, as follows:
+
+```bash
+$ python setup.py install
+```
+
+The preceding command will install the application along with all the dependencies mentioned in install_requires, that is, Flask and all of Flask's dependencies. Now the app can be used just like any Python package in a Python environment.
