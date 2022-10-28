@@ -1,13 +1,16 @@
-# Making a Flask app installable using setuptools
+# Boostraping the recommanded layout
 
-We now have a Flask app, but how do we install it like any Python package? It is possible that another application might depend on our application, or that our application is in fact an extension for Flask and would need to be installed in a Python environment so it can be used by other applications. In this recipe, we will see how `setuptools` can be used to create an installable Python package.
+y default, Flask expects templates to be placed inside a folder named `templates` at the application root level. If this folder is present, then Flask will automatically read the contents by making the contents of this folder available for use with the `render_template()` method, which we will use extensively throughout this book.
 
-most of the configuration is self-explanatory. The classifiers are used when the application is made available on PyPI. These will help other users search the application using the relevant classifiers.
+The first thing to do is to add a new folder named `templates` under `my_app`. The application structure should look like the following directory structure:
 
-Now, we can run this file with the install keyword, as follows:
-
-```bash
-$ python setup.py install
+```yml
+flask_app/ 
+    - run.py 
+    my_app/ 
+        - __init__.py 
+        - hello/ 
+            - __init__.py 
+            - views.py 
+        - templates
 ```
-
-The preceding command will install the application along with all the dependencies mentioned in install_requires, that is, Flask and all of Flask's dependencies. Now the app can be used just like any Python package in a Python environment.
