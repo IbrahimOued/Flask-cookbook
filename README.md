@@ -1,41 +1,39 @@
-# Creating a custom context processor
+# Creating a custom Jinja2 filter
 
-Sometimes, we **might want to calculate or process a value directly in templates**. Jinja2 maintains the notion that **the processing of logic should be handled in views and not in templates**, and so keeps templates clean. A context processor becomes a handy tool in this case. With a context processor, we can pass our values to a method, which will then be processed in a Python method, and our resultant value will be returned. This is done by simply adding a function to the template context, thanks to Python allowing its users to pass functions like any other object
-
-To write a custom context processor, follow the required steps.
-
-Let's first display the descriptive name of the product in the format `Category / Product-name`. Afterwards, add the method to `my_app/product/views.py`, as follows:
+After looking at the previous recipe, experienced developers might wonder why we used a context processor for the purpose of creating a well-formatted product name. Well, we can also write a filter for the same purpose, which will make things much cleaner. A filter can be written to display the descriptive name of a product, as shown in the following example:
 
 ```python
-@product_blueprint.context_processor
-def product_name_processor(): 
-    def full_name(product): 
-        return '{0} / {1}'.format(product['category'], 
-           product['name']) 
-    return {'full_name': full_name}
+@product_blueprint.app_template_filter('full_name') 
+def full_name_filter(product): 
+    return '{0} / {1}'.format(product['category'], product['name'])
 ```
 
-A context is simply a dictionary that can be modified to add or remove values. Any method decorated with @product_blueprint.context_processor should return a dictionary that updates the actual context. We can use the preceding context processor as follows:
-
-```python
-{{ full_name(product) }} 
-```
-
-We can add the preceding code to our app for the product listing (in the `flask_app/my_app/templates/product.html` file) in the following manner:
+This can also be used as follows:
 
 ```html
-{% extends 'home.html' %} 
- 
-{% block container %} 
-  <div class="top-pad"> 
-    <h4>{{ full_name(product) }}</h4> 
-    <h1>{{ product['name'] }} 
-      <small>{{ product['category'] }}</small> 
-    </h1> 
-    <h3>$ {{ product['price'] }}</h3> 
-  </div> 
-{% endblock %}
+{{ product|full_name }} 
 ```
 
-The resulting parsed HTML page should look like the following screenshot:
+The preceding code will yield a similar result as in the previous recipe. Moving on, let's now take things to a higher level by using external libraries to format currency.
 
+First, let's create a filter to format a currency based on the current local language. Add the following code to `my_app/__init__.py`:
+
+```python
+import ccy 
+from flask import request 
+ 
+@app.template_filter('format_currency') 
+def format_currency_filter(amount): 
+    currency_code = ccy.countryccy(request.accept_languages.best[-2:]) 
+    return '{0} {1}'.format(currency_code, amount)
+```
+
+> `request.accept_languages` might not work in cases where a request does not have the `ACCEPT-LANGUAGES` *header*. The preceding snippet will require the installation of a new package, ccy, as follows:
+
+```bash
+pip3 install ccy
+```
+
+The filter created in this example takes the language that best matches the current browser locale (which, in my case, is en-US), takes the last two characters from the locale string, and then generates the currency as per the ISO country code, which is represented by the two characters.
+
+> An interesting point to note in this recipe is that the Jinja2 filter can be created at the blueprint level as well as at the application level. If the filter is at the blueprint level, the decorator would be app_template_filter; otherwise, at the application level, the decorator would be template_filter.
