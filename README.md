@@ -1,41 +1,35 @@
-# Creating a custom Jinja2 filter
+# Creating a custom macro for forms
 
-After looking at the previous recipe, experienced developers might wonder why we used a context processor for the purpose of creating a well-formatted product name. Well, we can also write a filter for the same purpose, which will make things much cleaner. A filter can be written to display the descriptive name of a product, as shown in the following example:
+Macros **allow us to write reusable pieces of HTML blocks**. They are analogous to functions in regular programming languages. **We can pass arguments to macros as we do to functions in Python, and we can then use them to process an HTML block**. Macros can be called any number of times, and the output will vary as per the logic inside them. In this recipe, let's understand how to write a macro in Jinja2.
 
-```python
-@product_blueprint.app_template_filter('full_name') 
-def full_name_filter(product): 
-    return '{0} / {1}'.format(product['category'], product['name'])
-```
+One of the most redundant pieces of code in HTML is that which defines input fields in forms. This is because most fields have similar code with style modifications, for example.
 
-This can also be used as follows:
+The following snippet is a macro that creates input fields when called. Best practice is to create the macro in a separate file for better reusability, for example, `_helpers.html`:
 
 ```html
-{{ product|full_name }} 
+{% macro render_field(name, class='', value='', type='text') -%} 
+    <input type="{{ type }}" name="{{ name }}" class="{{ class }}" 
+        value="{{ value }}"/> 
+{%- endmacro %} 
 ```
 
-The preceding code will yield a similar result as in the previous recipe. Moving on, let's now take things to a higher level by using external libraries to format currency.
+> The minus sign (-) before and after % will strip the whitespace before and after these blocks, making the HTML code cleaner to read.
 
-First, let's create a filter to format a currency based on the current local language. Add the following code to `my_app/__init__.py`:
+Now the macro should be imported in the file to be used, as follows:
 
-```python
-import ccy 
-from flask import request 
- 
-@app.template_filter('format_currency') 
-def format_currency_filter(amount): 
-    currency_code = ccy.countryccy(request.accept_languages.best[-2:]) 
-    return '{0} {1}'.format(currency_code, amount)
+```html
+{% from '_helpers.html' import render_field %} 
 ```
 
-> `request.accept_languages` might not work in cases where a request does not have the `ACCEPT-LANGUAGES` *header*. The preceding snippet will require the installation of a new package, ccy, as follows:
+it can now be called using the following code:
 
-```bash
-pip3 install ccy
+```html
+<fieldset> 
+    {{ render_field('username', 'icon-user') }} 
+    {{ render_field('password', 'icon-key', type='password') }} 
+</fieldset>
 ```
 
-The filter created in this example takes the language that best matches the current browser locale (which, in my case, is en-US), takes the last two characters from the locale string, and then generates the currency as per the ISO country code, which is represented by the two characters.
+It is always good practice to define macros in a different file to keep the code clean and increase code readability.
 
-> An interesting point to note in this recipe is that the Jinja2 filter can be created at the blueprint level as well as at the application level. If the filter is at the blueprint level, the decorator would be app_template_filter; otherwise, at the application level, the decorator would be template_filter.
-
-The *Implementing block composition and layout inheritance* branch will aid your understanding of the context of this recipe.
+> If you need to write a private macro that cannot be accessed from outside its current file, name the macro with an underscore preceding the name
