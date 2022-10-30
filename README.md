@@ -1,32 +1,41 @@
-# Implementing block composition and layout inheritance
+# Creating a custom context processor
 
-Usually, any web application will have a number of web pages that are different to each other. However, code blocks such as headers and footers will appear the same on almost all pages throughout the site; likewise, the menu will remain the same. In fact, it is usually just the center container block that changes. For this, Jinja2 provides a great way of ensuring inheritance among templates.
+Sometimes, we **might want to calculate or process a value directly in templates**. Jinja2 maintains the notion that **the processing of logic should be handled in views and not in templates**, and so keeps templates clean. A context processor becomes a handy tool in this case. With a context processor, we can pass our values to a method, which will then be processed in a Python method, and our resultant value will be returned. This is done by simply adding a function to the template context, thanks to Python allowing its users to pass functions like any other object
 
-With this in mind, it's good practice to have a base template where the basic layout of the site, along with the header and footer, can be structured.
+To write a custom context processor, follow the required steps.
 
-```yml
-flask_app/ 
-    - run.py 
-    my_app/ 
-        - __init__.py 
-        - product/ 
-            - __init__.py 
-            - views.py 
-            - models.py 
-        - templates/ 
-            - base.html 
-            - home.html 
-            - product.html 
-        - static/ 
-            - js/ 
-                - bootstrap.min.js 
-            - css/ 
-                - bootstrap.min.css 
-                - main.css 
+Let's first display the descriptive name of the product in the format `Category / Product-name`. Afterwards, add the method to `my_app/product/views.py`, as follows:
+
+```python
+@product_blueprint.context_processor
+def product_name_processor(): 
+    def full_name(product): 
+        return '{0} / {1}'.format(product['category'], 
+           product['name']) 
+    return {'full_name': full_name}
 ```
 
-The name of the blueprint (product) that is passed in the Blueprint constructor will be appended to the endpoints defined in this blueprint. Have a look at the base.html code for clarity.
+A context is simply a dictionary that can be modified to add or remove values. Any method decorated with @product_blueprint.context_processor should return a dictionary that updates the actual context. We can use the preceding context processor as follows:
 
-> The abort() method comes in handy when you want to abort a request with a specific error message. Flask provides basic error message pages that can be customized as needed. We will look at them in the Creating custom 404 and 500 handlers
+```python
+{{ full_name(product) }} 
+```
 
-When considering templates, remember that the first template acts as the base for all templates. Name this template base.html and place it in `my_app/templates/base.html`, as follows:
+We can add the preceding code to our app for the product listing (in the `flask_app/my_app/templates/product.html` file) in the following manner:
+
+```html
+{% extends 'home.html' %} 
+ 
+{% block container %} 
+  <div class="top-pad"> 
+    <h4>{{ full_name(product) }}</h4> 
+    <h1>{{ product['name'] }} 
+      <small>{{ product['category'] }}</small> 
+    </h1> 
+    <h3>$ {{ product['price'] }}</h3> 
+  </div> 
+{% endblock %}
+```
+
+The resulting parsed HTML page should look like the following screenshot:
+
