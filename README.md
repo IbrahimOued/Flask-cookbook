@@ -37,3 +37,5 @@ pip3 install ccy
 The filter created in this example takes the language that best matches the current browser locale (which, in my case, is en-US), takes the last two characters from the locale string, and then generates the currency as per the ISO country code, which is represented by the two characters.
 
 > An interesting point to note in this recipe is that the Jinja2 filter can be created at the blueprint level as well as at the application level. If the filter is at the blueprint level, the decorator would be app_template_filter; otherwise, at the application level, the decorator would be template_filter.
+
+The *Implementing block composition and layout inheritance* branch will aid your understanding of the context of this recipe.
